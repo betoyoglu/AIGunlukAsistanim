@@ -11,6 +11,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { analyzeSentiment } from '../services/AIService';
+import { saveEntry } from '../services/StorageService';
 
 const DailyEntryScreen = () => {
   const [text, setText] = useState('');
@@ -23,7 +25,7 @@ const DailyEntryScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // analiz butonu
-  const handleAnalyzePress = () => {
+  const handleAnalyzePress = async () => {
     if (text.trim().length === 0) {
       Alert.alert('Hata', 'Lütfen analiz için bir metin girin.');
       return;
@@ -31,13 +33,50 @@ const DailyEntryScreen = () => {
 
     setIsLoading(true);
 
-    // Sahte API
-    setTimeout(() => {
-      setSentiment('Pozitif');
-      setSummary('Bugün güzel bir gün olmuş (basit özet)');
-      setSuggestion('Kendine 10 dk mola ver (öneri)');
+   try {
+      // apiden gelen duygu analizi
+      const sentimentResult = await analyzeSentiment(text); 
+
+      if (sentimentResult) {
+        let localSummary = '';
+        let localSuggestion = '';
+
+        if (sentimentResult === 'POSITIVE') {
+          localSummary = 'It looks like you had a generally positive day.';
+          localSuggestion = 'Keep up this great energy!';
+        } else if (sentimentResult === 'NEGATIVE') {
+          localSummary = 'It seems like today was a bit challenging.';
+          localSuggestion = 'You could take a 10-minute break for yourself.';
+        } else {
+          localSummary = 'Your feelings seem quite balanced today.';
+          localSuggestion = 'A calm walk might feel good.';
+        }
+
+        setSentiment(sentimentResult);
+        setSummary(localSummary);
+        setSuggestion(localSuggestion);
+
+        //girdiyi kaydet
+        const entryToSave = {
+        id: new Date().toISOString(), 
+        date: new Date().toLocaleDateString('tr-TR'), 
+        originalText: text,           
+        sentiment: sentimentResult,  
+        summary: localSummary,       
+        suggestion: localSuggestion, 
+      };
+
+      await saveEntry(entryToSave);
+
+      } else {
+        Alert.alert('Hata', 'Analiz yapılırken bir sorun oluştu. Lütfen tekrar deneyin.');
+      }
+
+    } catch (error) {
+      Alert.alert('Hata', 'API bağlantı hatası.');
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
   
   const handleReset = () => {
