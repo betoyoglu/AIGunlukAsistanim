@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { analyzeSentiment } from '../services/AIService';
 import { saveEntry } from '../services/StorageService';
 
-const DailyEntryScreen = () => {
+const DailyEntryScreen = ({ navigation }) => {
   const [text, setText] = useState('');
   
   // analiz sonuçları
@@ -163,6 +163,15 @@ const DailyEntryScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {renderContent()}
       </ScrollView>
+
+    {!sentiment && !isLoading && (
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('History')} 
+      >
+        <Text style={styles.fabText}>History</Text>
+      </TouchableOpacity>
+    )}
     </SafeAreaView>
   );
 };
@@ -174,7 +183,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1, 
     padding: 20,
-    backgroundColor: '#000000',
     justifyContent: 'center',
   },
   headerContainer: {
@@ -254,6 +262,26 @@ const styles = StyleSheet.create({
   },
   resultText: {
     fontSize: 16,
+  },
+  fab: {
+    position: 'absolute', 
+    width: 60,
+    height: 60,
+    borderRadius: 30, 
+    backgroundColor: '#007AFF', 
+    justifyContent: 'center',
+    alignItems: 'center',
+    bottom: 30, 
+    right: 30, 
+    elevation: 8, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  fabText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 
