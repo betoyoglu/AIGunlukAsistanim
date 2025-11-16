@@ -4,13 +4,13 @@
 
 ## Özellikler
 
-Duygu Analizi: Kullanıcının girdiği metnin POSITIVE veya NEGATIVE olduğunu belirler.
+* Duygu Analizi: Kullanıcının girdiği metnin POSITIVE veya NEGATIVE olduğunu belirler.
 
-Lokal Depolama: Tüm girdiler ve analizler, AsyncStorage kullanılarak güvenli bir şekilde cihazda saklanır.
+* Lokal Depolama: Tüm girdiler ve analizler, AsyncStorage kullanılarak güvenli bir şekilde cihazda saklanır.
 
-Geçmiş Ekranı: "History" ekranında tüm geçmiş girdiler, duygu durumunu belirten renkli çubuklarla listelenir. (Yeşil "Pozitif", mavi "Negatif)
+* Geçmiş Ekranı: "History" ekranında tüm geçmiş girdiler, duygu durumunu belirten renkli çubuklarla listelenir. (Yeşil "Pozitif", mavi "Negatif)
 
-Offline Desteği: Kaydedilen girdilere internet bağlantısı olmaksızın "History" ekranından erişilebilir.
+* Offline Desteği: Kaydedilen girdilere internet bağlantısı olmaksızın "History" ekranından erişilebilir.
 
 <img width="1920" height="1080" alt="1" src="https://github.com/user-attachments/assets/37704618-433d-4d8a-9f73-0f4b44ba8335" />
 
