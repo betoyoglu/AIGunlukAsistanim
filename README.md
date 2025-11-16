@@ -1,97 +1,57 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# AI Günlük Asistanım
 
-# Getting Started
+> Kullanıcının yazdığı günlük girdileri AI ile analiz eden, duygu durumunu belirleyen ve bu girdileri lokal olarak saklayan bir React Native mobil uygulamasıdır. Bu proje, 3 günlük bir mini proje kapsamında geliştirilmiştir.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Özellikler
 
-## Step 1: Start Metro
+Duygu Analizi: Kullanıcının girdiği metnin POSITIVE veya NEGATIVE olduğunu belirler.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+Lokal Depolama: Tüm girdiler ve analizler, AsyncStorage kullanılarak güvenli bir şekilde cihazda saklanır.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+Geçmiş Ekranı: "History" ekranında tüm geçmiş girdiler, duygu durumunu belirten renkli çubuklarla listelenir. (Yeşil "Pozitif", mavi "Negatif)
 
+Offline Desteği: Kaydedilen girdilere internet bağlantısı olmaksızın "History" ekranından erişilebilir.
+
+<img width="1920" height="1080" alt="1" src="https://github.com/user-attachments/assets/37704618-433d-4d8a-9f73-0f4b44ba8335" />
+
+<img width="1920" height="1080" alt="2" src="https://github.com/user-attachments/assets/8ba7cf11-79a1-4710-ade7-78ef115c28dc" />
+
+
+## Kullanılan AI Modeli ve API
+
+Ana Model (Duygu Analizi): distilbert/distilbert-base-uncased-finetuned-sst-2-english (https://huggingface.co/distilbert/distilbert-base-uncased-finetuned-sst-2-english)
+* Bu model, girilen metni analiz ederek POSITIVE (Pozitif) veya NEGATIVE (Negatif) olarak sınıflandıran bir duygu analizi modelidir.
+* Uygulama, distilbert modelinden POSITIVE veya NEGATIVE sonucunu aldıktan sonra, bu sonuca bağlı olarak önceden tanımlanmış (if/else) bir özet ve öneri metnini kullanıcıya gösterir.
+
+## Kullanılan Teknolojiler
+
+* Platform: React Native CLI
+* Navigasyon: React Navigation (Native Stack)
+* Lokal Depolama: @react-native-async-storage/async-storage
+* UI/UX: react-native-vector-icons (İkonlar için)
+* API İsteği: fetch
+* Güvenlik: react-native-dotenv (API anahtarını gizlemek için)
+
+## Kurulum ve Çalıştırma Adımları
+1. Projeyi klonlayın:
 ```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+git clone https://github.com/kullanici-adiniz/AIGunlukAsistanim.git
+cd AIGunlukAsistanim
 ```
 
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
+2. Gerekli paketleri yükleyin:
 ```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
+npm install
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
+3. API Anahtarını (Token) Ayarlayın:
 ```sh
-bundle install
+# .env adında yeni bir dosya oluşturun. .env dosyasının içine Hugging Face "Access Token"ınızı (Rol: read) ekleyin.
+# API_TOKEN=hf_...TOKENINIZI_BURAYA_YAPISTIRIN...
 ```
 
-Then, and every time you update your native dependencies, run:
-
+4. Uygulamayı Çalıştırın:
 ```sh
-bundle exec pod install
+npx react-native run-android
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
