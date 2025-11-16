@@ -1,41 +1,112 @@
 import React, { useState } from 'react';
 import {
-  View, 
+  View,
   Text,
   TextInput,
-  Image,
-  TouchableOpacity,
   StyleSheet,
   Alert,
   ScrollView,
   ActivityIndicator,
+  TouchableOpacity,
+  Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Icon from 'react-native-vector-icons/MaterialIcons'; 
+import { useNavigation } from '@react-navigation/native';
+
 import { analyzeSentiment } from '../services/AIService';
 import { saveEntry } from '../services/StorageService';
 
-const DailyEntryScreen = ({ navigation }) => {
+
+const AnalysisResultScreen = ({ sentiment, summary, suggestion, onReset }) => {
+
+  const isPositive = sentiment === 'POSITIVE';
+
+  const containerStyle = {
+    ...styles.resultsContainer, 
+    backgroundColor: isPositive ? '#F8F3CE' : '#7A7A73' //pozitifse sarı
+  };
+
+  const titleStyle = {
+    ...styles.resultsTitle,
+    color: isPositive ? '#000' : '#FFF' // Sarı zeminse siyah, gri zeminse beyaz
+  };
+
+  const chipStyle = {
+    ...styles.chip,
+    backgroundColor: isPositive ? '#E0E0E0' : '#4A4A4A' // Sarı zeminse açık gri, gri zeminse koyu gri
+  };
+
+  const chipTextStyle = {
+    ...styles.chipText,
+    color: isPositive ? '#000' : '#E0E0E0' // Metin renkleri
+  };
+
+  const buttonStyle = {
+    ...styles.actionButton,
+    backgroundColor: isPositive ? '#222' : '#FFD700' 
+  };
+
+  const buttonTextStyle = {
+     ...styles.actionButtonText,
+     color: isPositive ? '#FFF' : '#000' 
+  };
+
+  return (
+    <View style={containerStyle}>
+      <Icon 
+        name={isPositive ? "sentiment-very-satisfied" : "sentiment-very-dissatisfied"} 
+        size={100} 
+        color={isPositive ? '#000' : '#AAA'} 
+      />
+
+      <Text style={titleStyle}>
+        {isPositive ? 'It is a positive day!' : 'It looks like you are feeling a bit down.'}
+      </Text>
+
+      <View style={styles.chipContainer}>
+        <View style={chipStyle}>
+          <Text style={chipTextStyle}>{summary}</Text>
+        </View>
+        <View style={chipStyle}>
+          <Text style={chipTextStyle}>{suggestion}</Text>
+        </View>
+      </View>
+
+      <TouchableOpacity style={buttonStyle} onPress={onReset}>
+        <Text style={buttonTextStyle}>Done!</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+const DailyEntryScreen = () => {
   const [text, setText] = useState('');
-  
-  // analiz sonuçları
-  const [sentiment, setSentiment] = useState(null); 
+  const [sentiment, setSentiment] = useState(null); // null ise giriş ekranı, doluysa sonuç ekranı
   const [summary, setSummary] = useState(null);
   const [suggestion, setSuggestion] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); 
 
-  const [isLoading, setIsLoading] = useState(false);
+  const navigation = useNavigation();
 
-  // analiz butonu
+  const getFormattedDate = () => {
+    return new Date().toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+
   const handleAnalyzePress = async () => {
     if (text.trim().length === 0) {
-      Alert.alert('Hata', 'Lütfen analiz için bir metin girin.');
+      Alert.alert('Error', 'Please enter some text for analysis.');
       return;
     }
-
     setIsLoading(true);
 
-   try {
-      // apiden gelen duygu analizi
-      const sentimentResult = await analyzeSentiment(text); 
+    try {
+      const sentimentResult = await analyzeSentiment(text);
 
       if (sentimentResult) {
         let localSummary = '';
@@ -51,236 +122,202 @@ const DailyEntryScreen = ({ navigation }) => {
           localSummary = 'Your feelings seem quite balanced today.';
           localSuggestion = 'A calm walk might feel good.';
         }
-
+        
         setSentiment(sentimentResult);
         setSummary(localSummary);
         setSuggestion(localSuggestion);
 
-        //girdiyi kaydet
         const entryToSave = {
-        id: new Date().toISOString(), 
-        date: new Date().toLocaleDateString('tr-TR'), 
-        originalText: text,           
-        sentiment: sentimentResult,  
-        summary: localSummary,       
-        suggestion: localSuggestion, 
-      };
-
-      await saveEntry(entryToSave);
+          id: new Date().toISOString(),
+          date: new Date().toLocaleDateString('tr-TR'),
+          originalText: text,
+          sentiment: sentimentResult,
+          summary: localSummary,
+          suggestion: localSuggestion,
+        };
+        await saveEntry(entryToSave);
 
       } else {
-        Alert.alert('Hata', 'Analiz yapılırken bir sorun oluştu. Lütfen tekrar deneyin.');
+        Alert.alert('Error', 'An error occurred during analysis. Please try again.');
       }
-
     } catch (error) {
-      Alert.alert('Hata', 'API bağlantı hatası.');
+      Alert.alert('Error', 'API connection error.');
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const handleReset = () => {
     setText('');
     setSentiment(null);
     setSummary(null);
     setSuggestion(null);
     setIsLoading(false);
-  };
-
-  const getBackgroundColor = () => {
-    if (!sentiment) return '#f5f5f5';
-    switch (sentiment.toLowerCase()) {
-      case 'pozitif': return '#FFFBEB';
-      case 'negatif': return '#F5F5F5';
-      default: return '#f5f5f5';
-    }
-  };
-
-  const renderContent = () => {
     
-    if (isLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0000ff" />
-          <Text style={{color: '#fff'}}>Analyzing...</Text>
-        </View>
-      );
-    }
+    navigation.navigate('History');
+  };
 
-    if (sentiment) {
-      return (
-        <View style={styles.resultsContainer}>
-          <View style={styles.resultBox}>
-            <Text style={styles.resultTitle}>Duygu Analizi</Text>
-            <Text style={styles.resultText}>{sentiment}</Text>
-          </View>
 
-          <View style={styles.resultBox}>
-            <Text style={styles.resultTitle}>Basit Özet</Text>
-            <Text style={styles.resultText}>{summary}</Text>
-          </View>
-
-          <View style={styles.resultBox}>
-            <Text style={styles.resultTitle}>Öneri</Text>
-            <Text style={styles.resultText}>{suggestion}</Text>
-          </View>
-
-          <TouchableOpacity onPress={handleReset} style={styles.button}>
-            <Text style={styles.buttonText}> New Analysis </Text>
-        </TouchableOpacity>
-        </View>
-      );
-    }
-
+  if (isLoading) {
     return (
-      <>
-        <View style={styles.headerContainer}>
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+      </SafeAreaView>
+    );
+  }
+
+  if (sentiment) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <AnalysisResultScreen
+          sentiment={sentiment}
+          summary={summary}
+          suggestion={suggestion}
+          onReset={handleReset}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate('History')}>
+          <Icon name="close" size={28} color="#FFF" />
+        </TouchableOpacity>
+        
+        <Text style={styles.headerDate}>{getFormattedDate()}</Text>
+        <View style={{ width: 28 }} /> 
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Image
           style={styles.image}
           source={require('../../assets/images/bird.png')}
         />
-        <View style={styles.headerTextContainer}>
-            <Text style={styles.titleLine1}>What have you been up to?</Text>
-            <Text style={styles.titleLine2}>How are you feeling today?</Text>
-        </View>
-      </View>
+        <Text style={styles.title}>How's your day going?</Text>
+        
         <TextInput
           style={styles.input}
-          placeholder="How was your day?"
+          placeholder="Write down what's on your mind today..."
+          placeholderTextColor="#888"
           value={text}
           onChangeText={setText}
           multiline={true}
         />
-        <TouchableOpacity onPress={handleAnalyzePress} style={styles.button}>
-            <Text style={styles.buttonText}> Analyze It </Text>
-        </TouchableOpacity>
-      </>
-    );
-  };
 
-  return (
-    <SafeAreaView style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {renderContent()}
+        <TouchableOpacity style={styles.analyzeButton} onPress={handleAnalyzePress}>
+          <Text style={styles.analyzeButtonText}>Analyze</Text>
+        </TouchableOpacity>
       </ScrollView>
 
-    {!sentiment && !isLoading && (
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => navigation.navigate('History')} 
-      >
-        <Text style={styles.fabText}>History</Text>
-      </TouchableOpacity>
-    )}
     </SafeAreaView>
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1, 
-    padding: 20,
-    justifyContent: 'center',
-  },
-  headerContainer: {
-    flexDirection: 'row',     
-    alignItems: 'center',     
+    backgroundColor: '#1E2A2D', 
     justifyContent: 'center', 
-    marginBottom: 20,        
   },
-  headerTextContainer: {
-    marginLeft: 15, 
-    alignItems: 'flex-start',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
   },
-  image: {
+  headerDate: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  
+  scrollContainer: {
+    flexGrow: 1, 
+    justifyContent: 'center',
+    padding: 20,
+  },
+  title: {
+    color: '#FFF',
+    fontSize: 32,
+    fontWeight: 'bold',
+    fontFamily: 'Inconsolata-Regular',
+    textAlign: 'center',
+    marginBottom: 30, 
+  },
+   image: {
     width: 80, 
     height: 80,
     resizeMode: 'contain',
-  },
-  titleLine1: {
-    fontSize: 20, 
-    fontWeight: 'bold',
-    fontFamily: 'Inconsolata-Regular',
-    color: '#FFFFFF', 
-  },
-  titleLine2: {
-    fontSize: 18, 
-    fontFamily: 'ShadowsIntoLightTwo-Regular',
-    color: '#FFFFFF', 
+    alignSelf: 'center',
+    marginBottom: 20,
   },
   input: {
-    minHeight: 120,    
-    maxHeight: 250,    
-    borderColor: '#000000',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 20,
-    backgroundColor: '#ffffff',
-    textAlignVertical: 'top',
+    minHeight: 150,
+    maxHeight: 250,
+    color: '#FFF',
     fontSize: 16,
-    width: '100%', 
+    textAlignVertical: 'top',
+    backgroundColor: '#2A3B3F', 
+    borderRadius: 12,
+    padding: 15,
+    width: '100%',
+    marginBottom: 20, 
   },
-  button: {
-    borderRadius: 10, 
-    borderWidth:1, 
-    borderColor:'#000', 
-    backgroundColor:'#be7734ff',
-    padding:10, 
-    alignItems:'center', 
-    marginBottom:10
-  },
-  buttonText: {
-    color:'#fff', 
-    fontFamily: 'Inconsolata-Regular',
-    fontSize:16, 
-    fontWeight:'bold'
-  },
-  loadingContainer: {
+
+  analyzeButton: {
+    backgroundColor: '#FFD700', 
+    padding: 18,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    width: '100%',
+  },
+  analyzeButtonText: {
+    color: '#000', 
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   resultsContainer: {
-    width: '100%', 
-  },
-  resultBox: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#000000',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 15,
-  },
-  resultTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#555',
-    marginBottom: 5,
-  },
-  resultText: {
-    fontSize: 16,
-  },
-  fab: {
-    position: 'absolute', 
-    width: 60,
-    height: 60,
-    borderRadius: 30, 
-    backgroundColor: '#007AFF', 
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    bottom: 30, 
-    right: 30, 
-    elevation: 8, 
-    shadowColor: '#000', 
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
+    padding: 30,
   },
-  fabText: {
-    color: 'white',
-    fontSize: 12,
+  resultsTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  chipContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginBottom: 40,
+  },
+  chip: {
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    margin: 5,
+  },
+  chipText: {
+    fontSize: 14,
+  },
+  actionButton: {
+    padding: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  actionButtonText: {
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });

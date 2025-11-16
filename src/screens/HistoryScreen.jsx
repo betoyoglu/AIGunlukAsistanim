@@ -1,14 +1,41 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList, 
+  TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getEntries } from '../services/StorageService';
-import { useFocusEffect } from '@react-navigation/native';
 
-const HistoryScreen = ({ navigation }) => {
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+
+
+const EntryCard = ({ item }) => {
+  const isPositive = item.sentiment === 'POSITIVE';
+  const barColor = isPositive ? '#34D399' : '#3B82F6'; 
+
+  return (
+    <View style={styles.card}>
+      <View style={[styles.sentimentBar, { backgroundColor: barColor }]} />
+      
+      <View style={styles.cardContent}>
+        <Text style={styles.cardDate}>{item.date}</Text>
+        <Text style={styles.cardText} numberOfLines={2}> 
+          {item.originalText}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+const HistoryScreen = () => {
+  const navigation = useNavigation();
   const [entries, setEntries] = useState([]);
 
-  //güncel olması için ekran açıldığında çalışır
+  
   useFocusEffect(
     React.useCallback(() => {
       const loadData = async () => {
@@ -20,35 +47,25 @@ const HistoryScreen = ({ navigation }) => {
     }, [])
   );
 
-  const renderEntry = ({ item }) => (
-    <View style={styles.entryBox}>
-      <Text style={styles.entryDate}>{item.date}</Text>
-      <Text style={styles.entryText}>{item.originalText}</Text>
-      <View style={styles.sentimentRow}>
-        <Text style={[
-            styles.sentimentLabel,
-            item.sentiment === 'POSITIVE' ? styles.positive : styles.negative
-          ]}>
-          {item.sentiment === 'POSITIVE' ? 'Positive 😄' : 'Negative 😞'}
-        </Text>
-      </View>
-    </View>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Weekly Report</Text>
+      <View style={styles.header}>
+        <Text style={styles.title}>History</Text>
+      </View>
+
       <FlatList
         data={entries} 
-        renderItem={renderEntry} 
+        renderItem={({ item }) => <EntryCard item={item} />} 
         keyExtractor={(item) => item.id} 
         ListEmptyComponent={
           <Text style={styles.emptyText}>There are no entries yet.</Text>
         }
+        contentContainerStyle={{ paddingBottom: 20 }} 
       />
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
+
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => navigation.goBack()} 
       >
         <Text style={styles.backButtonText}>Back to Home</Text>
       </TouchableOpacity>
@@ -56,76 +73,68 @@ const HistoryScreen = ({ navigation }) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 10,
+    backgroundColor: '#1E2A2D', 
+  },
+  header: {
+    padding: 20,
+    paddingTop: Platform.OS === 'android' ? 20 : 0,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2A3B3F', 
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#333',
-  },
-  entryBox: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
-    elevation: 2, 
-    shadowColor: '#000', 
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-  },
-  entryDate: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 5,
-  },
-  entryText: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 10,
-  },
-  sentimentRow: {
-    flexDirection: 'row',
-  },
-  sentimentLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 12,
-    overflow: 'hidden', 
-  },
-  positive: {
-    backgroundColor: '#DCFCE7', 
-    color: '#166534', 
-  },
-  negative: {
-    backgroundColor: '#FEE2E2', 
-    color: '#991B1B', 
+    color: '#FFF',
   },
   emptyText: {
+    color: '#AAA',
     textAlign: 'center',
     marginTop: 50,
     fontSize: 16,
-    color: '#888',
+  },
+  card: {
+    backgroundColor: '#2A3B3F', 
+    borderRadius: 12,
+    marginHorizontal: 20,
+    marginTop: 15,
+    flexDirection: 'row', 
+    overflow: 'hidden', 
+    elevation: 3, 
+  },
+  sentimentBar: {
+    width: 6,
+  },
+  cardContent: {
+    padding: 15,
+    flex: 1, 
+  },
+  cardDate: {
+    fontSize: 12,
+    color: '#AAA', 
+    marginBottom: 5,
+  },
+  cardText: {
+    fontSize: 16,
+    color: '#FFF',
+    lineHeight: 22, 
   },
   backButton: {
-    backgroundColor: '#007AFF', 
-    padding: 15,
-    borderRadius: 10,
+    backgroundColor: '#FFD700', 
+    padding: 18,
+    borderRadius: 12,
     alignItems: 'center',
-    marginTop: 10,
+    margin: 20,
   },
   backButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#000',
+    fontSize: 18,
     fontWeight: 'bold',
-  }
+  },
 });
 
 export default HistoryScreen;
